@@ -1,0 +1,23 @@
+{
+    "name": "My Codespace - US West",
+    "image": "mcr.microsoft.com/vscode/devcontainers/python:3.11",
+    "containerEnv": {
+        "TZ": "America/Los_Angeles"
+    },
+    "runArgs": [
+        "--dns", "8.8.8.8",
+        "--dns", "1.1.1.1",
+        "--dns-search", "westus.internal"
+    ],
+    "postStartCommand": "bash /workspaces/Bot/setup.sh",
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "python.pythonPath": "/usr/local/bin/python"
+            },
+            "extensions": [
+                "ms-python.python"
+            ]
+        }
+    }
+}
