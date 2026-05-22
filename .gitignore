@@ -1,0 +1,9 @@
+# .gitignore — sensitive files ko repo se bahar rakho
+__pycache__/
+*.pyc
+.env
+*.txt
+danger*
+users.txt
+telegram_token.txt
+*.log
