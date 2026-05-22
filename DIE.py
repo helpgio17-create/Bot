@@ -47,7 +47,7 @@ async def manage(update: Update, context: CallbackContext):
         await context.bot.send_message(chat_id=chat_id, text="*⚠️ Unauthorized*", parse_mode='Markdown')
         return
     if len(args) != 2:
-        await context.bot.send_message(chat_id=chat_id, text="*/manage <add|rem> <user_id>*", parse_mode='Markdown')
+        await context.bot.send_message(chat_id=chat_id, text="*/manage <add/rem> <user_id>*", parse_mode='Markdown')
         return
     cmd, uid = args[0], args[1].strip()
     if cmd == 'add':
@@ -58,7 +58,7 @@ async def manage(update: Update, context: CallbackContext):
         users.discard(uid)
         save_users(users)
         await context.bot.send_message(chat_id=chat_id, text=f"*✔️ User {uid} removed*", parse_mode='Markdown')
-
+        
 async def run_attack(chat_id, ip, port, duration, context):
     global attack_in_progress
     attack_in_progress = True
