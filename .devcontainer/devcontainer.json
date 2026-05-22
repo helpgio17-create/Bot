@@ -1,5 +1,5 @@
 {
-    "name": "My Codespace - US West",
+    "name": "Bot — US West",
     "image": "mcr.microsoft.com/vscode/devcontainers/python:3.11",
     "containerEnv": {
         "TZ": "America/Los_Angeles"
@@ -9,14 +9,17 @@
         "--dns", "1.1.1.1",
         "--dns-search", "westus.internal"
     ],
+    "postCreateCommand": "chmod +x /workspaces/Bot/setup.sh",
     "postStartCommand": "bash /workspaces/Bot/setup.sh",
     "customizations": {
         "vscode": {
             "settings": {
-                "python.pythonPath": "/usr/local/bin/python"
+                "python.pythonPath": "/usr/local/bin/python",
+                "terminal.integrated.defaultProfile.linux": "bash"
             },
             "extensions": [
-                "ms-python.python"
+                "ms-python.python",
+                "ms-python.vscode-pylance"
             ]
         }
     }
