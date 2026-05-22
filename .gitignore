@@ -1,9 +1,8 @@
-# .gitignore
 __pycache__/
 *.pyc
 .env
 *.txt
-bgmi          # ← change: danger* → bgmi
+bgmi
 users.txt
 telegram_token.txt
 *.log
