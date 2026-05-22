@@ -9,7 +9,7 @@ echo "America/Los_Angeles" | sudo tee /etc/timezone > /dev/null
 
 # Packages
 sudo apt-get update -qq
-sudo apt-get install -y -qq dnsutils build-essential upx-ucl
+sudo apt-get install -y -qq dnsutils build-essential upx-ucl clang
 
 # Python deps
 pip install --quiet --upgrade python-telegram-bot
