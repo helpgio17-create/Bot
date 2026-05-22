@@ -37,7 +37,7 @@ def resolve_target(target):
 
 async def start(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
-    msg = "*🔥 Welcome! 🔥*\n\n*Use /attack <ip> <port> <duration>*\n*Ex: /attack 8.8.8.8 80 30*"
+    msg = "*🔥 Welcome! 🔥*\n\n*Use /attack   *\n*Ex: /attack 8.8.8.8 80 30*"
     await context.bot.send_message(chat_id=chat_id, text=msg, parse_mode='Markdown')
 
 async def manage(update: Update, context: CallbackContext):
