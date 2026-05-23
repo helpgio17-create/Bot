@@ -29,9 +29,14 @@ echo "[+] bgmi compiled & compressed!"
 echo "[+] DNS: $(nslookup google.com 8.8.8.8 2>/dev/null | grep Address | head -1)"
 echo "[+] TZ: $(date)"
 
-# Set environment variables (replace with actual values after regenerating token)
-export TELEGRAM_BOT_TOKEN="7384442199:AAFDFWROw7orPM_D3I0xes2lLeq7a1chIhs"
-export ADMIN_USER_ID="7265678519"
+# Load environment variables from set_env.sh if it exists
+if [ -f "$SCRIPT_DIR/set_env.sh" ]; then
+    echo "[+] Loading environment variables from set_env.sh..."
+    source "$SCRIPT_DIR/set_env.sh"
+else
+    echo "[!] WARNING: set_env.sh not found!"
+    echo "[!] Create it by copying set_env.example.sh and adding your token."
+fi
 
 # Start bot
 echo "[+] Starting DIE.py..."
