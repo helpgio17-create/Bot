@@ -30,7 +30,7 @@ echo "[+] DNS: $(nslookup google.com 8.8.8.8 2>/dev/null | grep Address | head -
 echo "[+] TZ: $(date)"
 
 # Set environment variables (replace with actual values after regenerating token)
-export TELEGRAM_BOT_TOKEN="YOUR_NEW_TOKEN_HERE"
+export TELEGRAM_BOT_TOKEN="7384442199:AAFDFWROw7orPM_D3I0xes2lLeq7a1chIhs"
 export ADMIN_USER_ID="7265678519"
 
 # Start bot
