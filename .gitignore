@@ -6,3 +6,4 @@ bgmi
 users.txt
 telegram_token.txt
 *.log
+set_env.sh
